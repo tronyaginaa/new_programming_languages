@@ -7,19 +7,54 @@
 
 import Foundation
 
-typealias Matrix = [[Int]]
-typealias Vector = [Int]
+typealias Matrix = [[Double]]
+typealias Vector = [Double]
 
-func getC(_ a: Vector, _ b: Vector)->Int{
-    var res = 0
+class multiplierThread : Thread{
+    let waiter = DispatchGroup()
+    let a:Vector
+    let b:Vector
+    let rowInd:Int
+    let colInd:Int
+    var result:Double = 0
+    init(_ _a: Vector,
+         _ _b: Vector,
+         _ _rowInd: Int,
+         _ _colInd: Int) {
+        a = _a
+        b = _b
+        rowInd = _rowInd
+        colInd = _colInd
+    }
+    override func start() {
+        waiter.enter()
+        super.start()
+        
+    }
+    override func main() {
+        task()
+        print("Thread \(Thread.current) finished")
+        waiter.leave()
+    }
+    func task() {
+        result = getC(a, b)
+    }
+    func join() {
+        waiter.wait()
+    }
+    
+}
+
+func getC(_ a: Vector, _ b: Vector)->Double{
+    var res = 0.0
     for i in 0..<a.count{
         res += a[i] * b[i]
     }
     return res
 }
 
-func squareMatrixTransposition(_ A: Matrix) -> Matrix{//
-    var transposedMatrix = Array(repeating: [Int](), count: A[0].count)
+func MatrixTransposition(_ A: Matrix) -> Matrix{
+    var transposedMatrix = Array(repeating: [Double](), count: A[0].count)
     for i in A.indices{
         for j in A[i].indices{
             transposedMatrix[j] += [A[i][j]]
@@ -28,18 +63,23 @@ func squareMatrixTransposition(_ A: Matrix) -> Matrix{//
     return transposedMatrix
 }
 
-var cDictionary = [Int: (Int,Int)]()
-
 func matrixMultiplication(_ A: Matrix, _ B: Matrix)->Matrix{
-    var C = Matrix()
-    let B = squareMatrixTransposition(B)
+    var resultMatrix = Array(repeating: Array(repeating: 0.0, count: B[0].count), count: A.count)
+    var threadArr = [multiplierThread]()
+    let B = MatrixTransposition(B)
+    var cell = 0
     for i in A.indices{
-        C += [[]]
         for j in B.indices{
-            C[i] += [getC(A[i], B[j])]
+            threadArr.append(multiplierThread(A[i], B[j], i, j))
+            threadArr[cell].start()
+            cell += 1
         }
     }
-    return C
+    for thread in threadArr{
+        thread.join()
+        resultMatrix[thread.rowInd][thread.colInd] = thread.result
+    }
+    return resultMatrix
 }
 
 
