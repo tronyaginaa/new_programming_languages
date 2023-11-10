@@ -32,25 +32,24 @@ class multiplierThread : Thread{
         
     }
     override func main() {
+        print("Thread started")
         task()
-        print("Thread \(Thread.current) finished")
+        print("Thread finished. Result of calculating : \(result)")
         waiter.leave()
     }
     func task() {
-        result = getC(a, b)
+        result = calculateCell(a, b)
     }
     func join() {
         waiter.wait()
     }
-    
-}
-
-func getC(_ a: Vector, _ b: Vector)->Double{
-    var res = 0.0
-    for i in 0..<a.count{
-        res += a[i] * b[i]
+    func calculateCell(_ a: Vector, _ b: Vector)->Double{
+        var res = 0.0
+        for i in 0..<a.count{
+            res += a[i] * b[i]
+        }
+        return res
     }
-    return res
 }
 
 func MatrixTransposition(_ A: Matrix) -> Matrix{
@@ -82,15 +81,66 @@ func matrixMultiplication(_ A: Matrix, _ B: Matrix)->Matrix{
     return resultMatrix
 }
 
+func matrixToString(_ matrix:Matrix, _ string: inout String){
+    for rows in matrix {
+        string += rows.map{String($0)}.joined(separator: " ")
+        string += "\n"
+    }
+}
 
-var matrixA = Matrix()
-matrixA += [[1, 2], [4, 6], [3, 5]]
-print(matrixA)
+func generateRandomMatrix(_ rowCount: Int, _ columnCount: Int)->Matrix{
+    var matrix = Matrix()
+    for i in 0..<rowCount{
+        matrix += [[]]
+        for _ in 0..<columnCount{
+            matrix[i] += [Double.random(in: -10...10)]
+        }
+    }
+    return matrix
+}
 
-var matrixB = Matrix()
-matrixB += [[2, 3, 2], [1, 5, 2]]
-print(matrixB)
+let MATRIX_A_ROW_COUNT = 2
+let MATRIX_A_COLUMN_COUNT = 5
+let MATRIX_B_ROW_COUNT = MATRIX_A_COLUMN_COUNT
+let MATRIX_B_COLUMN_COUNT = 2
 
+var matrixA = generateRandomMatrix(MATRIX_A_ROW_COUNT, MATRIX_A_COLUMN_COUNT)
+var matrixB = generateRandomMatrix(MATRIX_B_ROW_COUNT, MATRIX_B_COLUMN_COUNT)
 var matrixC = matrixMultiplication(matrixA, matrixB)
-print(matrixC)
 
+var outputString = "A:\n"
+matrixToString(matrixA, &outputString)
+outputString += "B:\n"
+matrixToString(matrixB, &outputString)
+outputString += "C:\n"
+matrixToString(matrixC, &outputString)
+
+let file = "MatrixMultiplication.txt"
+if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+    let path = dir.appendingPathComponent(file)
+    do {
+            try outputString.write(to: path, atomically: false, encoding: String.Encoding.utf8)
+        }
+    catch {}
+}
+
+
+/*
+Test matrixes
+Expected multiplication result:
+4 13 6
+14 42 20
+11 34 16
+*/
+matrixA = [[1, 2], [4, 6], [3, 5]]
+matrixB = [[2, 3, 2], [1, 5, 2]]
+matrixC = matrixMultiplication(matrixA, matrixB)
+
+outputString = "A:\n"
+matrixToString(matrixA, &outputString)
+outputString += "B:\n"
+matrixToString(matrixB, &outputString)
+outputString += "C:\n"
+matrixToString(matrixC, &outputString)
+
+print(outputString)
