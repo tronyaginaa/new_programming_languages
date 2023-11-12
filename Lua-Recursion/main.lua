@@ -2,78 +2,84 @@ local function readGraph(path)
     local graph= {{}}
     local file = io.open(path, "r")
     if file == nil then
-        print("The file cannot be opened")
-        return nil, nil
+        io.write("the file cannot be opened")
+        return nil
     end
     local line = file:read("l")
-    local numOfVertices = tonumber(line)
-    for i = 1,numOfVertices do
-        graph[i] = {}
-        for j = 1,numOfVertices do
-            graph[i][j] = 0
-        end
-    end
     local i = 1
-    line = file:read("l")
     while line ~= nil do
-        for num in line:gmatch("%S+") do
-            graph[i][tonumber(num)] = 1
+        graph[i] = {}
+        for vertex in line:gmatch("%S+") do
+            table.insert(graph[i], tonumber(vertex))
         end
         line = file:read("l")
         i = i + 1
     end
-    return graph, numOfVertices
+    return graph
 end
 
-local function DFS(graph, num, numOfVertices, endPoint)
-    if num == endPoint then
-        table.insert(WAY, num)
+local function DFS(graph, vertex, endVertex)
+    if vertex == endVertex then
+        table.insert(WAY, vertex)
         return true 
     end
     if CHEKED_VERTICES == true then
         return false
     end
-    CHEKED_VERTICES[num] = true
-    table.insert(WAY, num)
-    for i = numOfVertices,1,-1  do
-        if graph[num][i] ~= 0 and CHEKED_VERTICES[i] ~= true then
-            table.insert(STACK, i)
-        end
-    end
-    while #STACK ~= 0 do
-        num = table.remove(STACK)
-        if CHEKED_VERTICES[num] ~= true then
-            local achived = DFS(graph, num, numOfVertices, endPoint)
+    CHEKED_VERTICES[vertex] = true
+    table.insert(WAY, vertex)
+    for _, nextVertex in pairs(graph[vertex]) do
+        if CHEKED_VERTICES[nextVertex] == false then
+            local achived = DFS(graph, nextVertex, endVertex)
             if achived then
                 return true
             end
-        end 
+        end
     end
     return false
 end
 
-STACK = {}
-CHEKED_VERTICES = {}
-WAY = {}
+local function length(t)
+    local len = 0
+    for _,_ in pairs(t) do
+        len = len + 1
+    end
+    return len
+end
 
-local function main(path)
-    local graph, numOfVertices = readGraph(path)
-    if graph == nil or numOfVertices == nil then
+local function graphProcessing(path)
+    local graph = readGraph(path)
+    if graph == nil then
         return
     end
-    for i = 1,numOfVertices do
+    io.write("Enter the starting vertex:")
+    local startVertex = io.read("n")
+    io.write("Enter the starting vertex:")
+    local endVertex = io.read("n")
+    if endVertex > length(graph) or startVertex > length(graph) or endVertex < -1 or startVertex < -1 then
+        io.write("incorect vertex index")
+        return
+    end
+    for i = 1,length(graph) do
         CHEKED_VERTICES[i] = false
     end
-    local achived = DFS(graph, 1, numOfVertices, 3)
+    local achived = DFS(graph, startVertex, endVertex)
     if achived then
+        io.write("Path between vertices: ")
         for key, vertices in pairs(WAY) do
-            print(vertices)
+            io.write(vertices, " ")
         end
+    else
+        io.write("impossible to find a path between vertices")
     end
     WAY = {}
     CHEKED_VERTICES = {}
 end
 
+
+io.write("Enter the file path:")
 local path = io.read()
-main(path)
+CHEKED_VERTICES = {}
+WAY = {}
+graphProcessing(path)
 
