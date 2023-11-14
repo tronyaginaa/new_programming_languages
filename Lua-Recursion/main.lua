@@ -27,11 +27,11 @@ local function DFS(graph, vertex, endVertex)
         return false
     end
     CHEKED_VERTICES[vertex] = true
-    table.insert(WAY, vertex)
     for _, nextVertex in pairs(graph[vertex]) do
         if CHEKED_VERTICES[nextVertex] == false then
             local achived = DFS(graph, nextVertex, endVertex)
             if achived then
+                table.insert(WAY, 1, vertex)
                 return true
             end
         end
